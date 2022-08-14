@@ -5,7 +5,6 @@ mod binary;
 use binary::byte::Byte;
 
 fn main() {
-    let a = Byte::from_dec(4);
-
+    let a = Byte::from_dec(3) * Byte::from_dec(63);
     a.log();
 }

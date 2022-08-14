@@ -1,19 +1,19 @@
 use std::{
     fmt::Debug,
-    ops::{Neg, Not},
+    ops::{Mul, Neg, Not, Shl},
 };
 
 use super::bit::Bit;
 
 #[derive(Clone, Copy)]
 pub struct Byte {
-    data: [Bit; 8],
+    data: [Bit; 32],
 }
 
 impl Byte {
     fn empty() -> Byte {
         Byte {
-            data: [Bit::empty(); 8],
+            data: [Bit::empty(); 32],
         }
     }
 
@@ -64,6 +64,38 @@ impl std::ops::Add for Byte {
     }
 }
 
+// Implement bit shift (done)
+impl Shl<usize> for Byte {
+    type Output = Byte;
+    fn shl(self, rhs: usize) -> Byte {
+        let mut res = Byte::empty();
+
+        for i in 0..(self.size() - rhs) {
+            res[i] = self[i + rhs];
+        }
+
+        return res;
+    }
+}
+
+// Implement binary multiplication
+impl Mul for Byte {
+    type Output = Byte;
+    fn mul(self, rhs: Self) -> Byte {
+        let mut res = Byte::empty();
+        let mut partial = Byte::empty();
+
+        for i in (0..self.size()).rev() {
+            for x in (0..rhs.size()).rev() {
+                partial[x] = self[i] & rhs[x];
+            }
+            res = res + (partial << self.size() - i - 1);
+            partial = Byte::empty();
+        }
+        return res;
+    }
+}
+
 // Negation / 1st compliment (done)
 impl Not for Byte {
     type Output = Byte;
@@ -72,7 +104,7 @@ impl Not for Byte {
         for i in 0..self.size() {
             res[i] = !self[i];
         }
-        res
+        return res;
     }
 }
 
@@ -83,23 +115,23 @@ impl Neg for Byte {
         let mut one = Byte::empty();
         let s = one.size();
         one[s - 1].set(1);
-        !self + one
+        return !self + one;
     }
 }
 
 impl std::ops::Sub for Byte {
     type Output = Byte;
     fn sub(self, rhs: Self) -> Byte {
-        self + -rhs
+        return self + -rhs;
     }
 }
 
-// Impliment a binary array to decimal int converter (done)
+// Implement a binary array to decimal int converter (done)
 impl Byte {
-    pub fn to_dec(&self) -> i8 {
-        let mut res = 0i8;
+    pub fn to_dec(&self) -> i32 {
+        let mut res = 0i32;
         let mut byte = if self.data[0].is_true() {
-            -*self
+            -(*self)
         } else {
             *self
         };
@@ -107,16 +139,16 @@ impl Byte {
         let sign = !self.data[0] * 1 + self.data[0] * -1;
 
         for i in 1..byte.data.len() {
-            res += byte.data[i].value() * 2i8.pow((byte.data.len() - i - 1) as u32);
+            res += byte.data[i].value() as i32 * 2i32.pow((byte.data.len() - i - 1) as u32);
         }
 
-        return res * sign;
+        return res * sign as i32;
     }
 }
 
-// Impliment int to binary array converter (done)
+// Implement int to binary array converter (done)
 impl Byte {
-    pub fn from_dec(dec: i8) -> Byte {
+    pub fn from_dec(dec: i32) -> Byte {
         // if dec > 127 || dec < -128 {
         //     panic!("Overflow");
         // }
@@ -128,7 +160,7 @@ impl Byte {
 
         // setting value bits
         while u != 0 {
-            let x = 2i8.pow((bits.size() - 1 - i) as u32);
+            let x = 2i32.pow((bits.size() - 1 - i) as u32);
             if u - x >= 0 {
                 bits[i].set(1);
                 u -= x;
