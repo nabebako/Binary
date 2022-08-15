@@ -1,6 +1,6 @@
 use std::{
     fmt::Debug,
-    ops::{Mul, Neg, Not, Shl},
+    ops::{Mul, Neg, Not, Shl, Shr},
 };
 
 use super::bit::Bit;
@@ -64,7 +64,7 @@ impl std::ops::Add for Byte {
     }
 }
 
-// Implement bit shift (done)
+// Left bit shift (done)
 impl Shl<usize> for Byte {
     type Output = Byte;
     fn shl(self, rhs: usize) -> Byte {
@@ -78,7 +78,25 @@ impl Shl<usize> for Byte {
     }
 }
 
-// Implement binary multiplication
+// Right arithmetic bit shift
+impl Shr<usize> for Byte {
+    type Output = Byte;
+    fn shr(self, rhs: usize) -> Self::Output {
+        let mut res = Byte::empty();
+
+        for i in 0..(self.size() - rhs) {
+            res[i + rhs] = self[i];
+        }
+
+        for i in 0..rhs {
+            res[i] = self[0];
+        }
+
+        return res;
+    }
+}
+
+// Implement binary multiplication (done)
 impl Mul for Byte {
     type Output = Byte;
     fn mul(self, rhs: Self) -> Byte {
