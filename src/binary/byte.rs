@@ -1,6 +1,6 @@
 use std::{
     fmt::Debug,
-    ops::{Mul, Neg, Not, Shl, Shr},
+    ops::{Add, BitAnd, Index, IndexMut, Mul, Neg, Not, Shl, Shr},
 };
 
 use super::bit::Bit;
@@ -26,7 +26,7 @@ impl Byte {
     }
 }
 
-impl std::ops::Index<usize> for Byte {
+impl Index<usize> for Byte {
     type Output = Bit;
     // fn index<'a>(&'a self, i: usize) -> &'a Bit {
     //     return &self.data[i];
@@ -36,14 +36,37 @@ impl std::ops::Index<usize> for Byte {
     }
 }
 
-impl std::ops::IndexMut<usize> for Byte {
+impl IndexMut<usize> for Byte {
     fn index_mut(&mut self, i: usize) -> &mut Bit {
         return &mut self.data[i];
     }
 }
 
+// Bit and
+impl BitAnd for Byte {
+    type Output = Byte;
+    fn bitand(self, rhs: Self) -> Byte {
+        let mut res = Byte::empty();
+        for i in 0..self.size() {
+            res[i] = self[i] & rhs[i];
+        }
+        return res;
+    }
+}
+
+impl BitAnd<Bit> for Byte {
+    type Output = Byte;
+    fn bitand(self, rhs: Bit) -> Byte {
+        let mut res = Byte::empty();
+        for i in 0..self.size() {
+            res[i] = self[i] & rhs;
+        }
+        return res;
+    }
+}
+
 // Binary addition (done)
-impl std::ops::Add for Byte {
+impl Add for Byte {
     type Output = Byte;
     fn add(self, rhs: Self) -> Byte {
         let mut res = Byte::empty();
@@ -110,6 +133,20 @@ impl Mul for Byte {
             res = res + (partial << self.size() - i - 1);
             partial = Byte::empty();
         }
+        return res;
+    }
+}
+
+// Power using square & Multiply Algorithm (done)
+impl Byte {
+    pub fn pow(self: Self, expo: Byte) -> Byte {
+        let mut res = Byte::from_dec(1);
+
+        for bit in expo.data {
+            res = res * res;
+            res = (res & !bit) + res * (self & bit);
+        }
+
         return res;
     }
 }
