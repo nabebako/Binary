@@ -26,6 +26,9 @@ impl Bit {
         self.data = if v == 0 { 0 } else { 1 };
         self
     }
+
+    pub const ON: Bit = Bit { data: 1 };
+    pub const OFF: Bit = Bit { data: 0 };
 }
 
 impl Default for Bit {
