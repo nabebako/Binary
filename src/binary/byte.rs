@@ -213,20 +213,24 @@ impl Div for Byte {
     type Output = Byte;
 
     fn div(mut self, mut rhs: Self) -> Byte {
-        let mut res = Byte::empty();
-        let mut remainder = Byte::empty();
+        let divisor = (rhs & !rhs[0]) | (-rhs & rhs[0]);
         let sign = self[0] ^ rhs[0];
 
-        self = (self & !self[0]) | (-self & self[0]);
-        rhs = (rhs & !rhs[0]) | (-rhs & rhs[0]);
+        let mut quotient = (self & !self[0]) | (-self & self[0]);
+        let mut remainder = Byte::empty();
 
-        for i in 0..self.size() {
-            remainder = (remainder << 1) + (Byte::from_dec(1) & self[i]);
-            res[i] = Byte::greq(&remainder, &rhs).to_bit();
-            remainder = (remainder & !res[i]) | ((remainder - rhs) & res[i]);
+        for _ in 0..self.size() {
+            let carry = quotient[0];
+            quotient = quotient << 1;
+            remainder = remainder << 1;
+            remainder[self.size() - 1] = carry;
+
+            let test = remainder - divisor;
+            remainder = (remainder & test[0]) | (test & !test[0]);
+            quotient[self.size() - 1] = !test[0];
         }
 
-        return (res & !sign) | (-res & sign);
+        return (quotient & !sign) | (-quotient & sign);
     }
 }
 
